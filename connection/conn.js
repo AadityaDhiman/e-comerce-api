@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const connectDB = () => {
     try {
-        return mongoose.connect("mongodb://127.0.0.1:27017/ecommerce").then(() => {
+        return mongoose.connect(process.env.MONGO_URI).then(() => {
             console.log("Connected ")
         })
     } catch (error) {
