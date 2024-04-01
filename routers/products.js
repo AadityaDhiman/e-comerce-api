@@ -36,9 +36,9 @@ const upload = multer({ storage: storage });
 
 router.post(`/`, upload.single('image'), async (req, res) => {
     try {
-        if (!req.file) {
-            return res.status(400).json({ message: "No file uploaded" });
-        }
+        // if (!req.file) {
+        //     return res.status(400).json({ message: "No file uploaded" });
+        // }
         const categories = await Category.findById(req.body.category);
 
         if (!categories) return res.status(404).send("some error: ")
