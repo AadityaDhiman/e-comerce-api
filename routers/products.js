@@ -26,7 +26,7 @@ const storage = multer.diskStorage({
         if (uploadError) { 
             console.log("ERROR IN MULTER ",uploadError);
         }
-        cb(uploadError,);
+        cb(uploadError, 'public/uploads');
     },
     filename: function (req, file, cb) {
         const fileName = file.originalname.split(' ').join('-');
@@ -195,7 +195,7 @@ router.put('/:id', async (req, res) => {
         if (!product)
             return res.status(500).send("the category is not available not updated")
         res.send(product)
-
+        
 
     } catch (error) {
         console.log(error.message)
