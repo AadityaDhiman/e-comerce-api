@@ -195,6 +195,7 @@ router.put('/:id', async (req, res) => {
         if (!product)
             return res.status(500).send("the category is not available not updated")
         res.send(product)
+        
 
     } catch (error) {
         console.log(error.message)
