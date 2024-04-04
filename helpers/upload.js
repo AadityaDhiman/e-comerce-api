@@ -1,5 +1,4 @@
 import { v2 as cloudinary } from "cloudinary";
-import fs from "fs";
 import dotenv from 'dotenv';
 dotenv.config()
 
@@ -9,20 +8,34 @@ cloudinary.config({
     api_secret: process.env.CLOUD_API_SECRET,
 })
 
-const uploadImage = async (localImagePath) => { 
-try {
-    if (!localImagePath) return "path not found";
+// this code for localPath
+// const uploadImage = async (localImagePath) => {
+// try {
+//     if (!localImagePath) return "path not found";
      
-    const response = await cloudinary.uploader.upload(localImagePath, {
-        resource_type:"auto",
+//     const response = await cloudinary.uploader.upload(localImagePath, {
+//         folder:products
+//     })
+//     return response
+// } catch (err) {
+//     console.log("EXCEPTION  IN UPLOADER=> ",err.message)
+//     // fs.unlinkSync(`public/uploads/${localImagePath}`)
+//     return null
+// }
+
+// }
+
+// this code for production on cloudinary
+
+const uploadImage = (file) => {
+    return new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream({ resource_type: 'auto' }, (err, result) => {
+            if(err) return reject(err)
+            else return resolve(result)
+
+        }).end(file.buffer)
     })
-    return response
-} catch (err) {
-    console.log("EXCEPTION  IN UPLOADER=> ",err.message)
-    fs.unlinkSync(`public/uploads/${localImagePath}`)
-    return null
 }
 
-}
 
 export default uploadImage

@@ -7,35 +7,36 @@ import multer from 'multer';
 import uploadImage from "../helpers/upload.js";
 // import AccessToken from '../helpers/jwt.js';
 
-const file_type = {
-    'image/png': 'png',
-    'image/jpeg': 'jpeg',
-    'image/gif': 'gif',
-    'image/jpg': 'jpg'
+// const file_type = {
+//     'image/png': 'png',
+//     'image/jpeg': 'jpeg',
+//     'image/gif': 'gif',
+//     'image/jpg': 'jpg'
 
-}
+// }
 
 // this is multer code for uploading files to server
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        const isValid = file_type[file.mimetype];
-        let uploadError = new Error('Invalid image type');
-        if (isValid) {
-            uploadError = null;
-        }
-        if (uploadError) { 
-            console.log("ERROR IN MULTER ",uploadError);
-        }
-        cb(uploadError, 'public/uploads');
-    },
-    filename: function (req, file, cb) {
-        const fileName = file.originalname.split(' ').join('-');
-        const extension = file_type[file.mimetype];
-        cb(null, `${fileName}-${Date.now()}.${extension}`);
-    }
-});
+// const storage = multer.diskStorage({
+//     destination: function (req, file, cb) {
+//         const isValid = file_type[file.mimetype];
+//         let uploadError = new Error('Invalid image type');
+//         if (isValid) {
+//             uploadError = null;
+//         }
+//         if (uploadError) {
+//         }
+//         cb(uploadError, 'public/uploads');
+//     },
+//     filename: function (req, file, cb) {
+//         const fileName = file.originalname.split(' ').join('-');
+//         const extension = file_type[file.mimetype];
+//         cb(null, `${fileName}-${Date.now()}.${extension}`);
+//     }
+// });
 
-const upload = multer({ storage: storage });
+// use for uploading without server storage and use ram 
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage })
 
 
 // This function is create a new product 
@@ -45,19 +46,18 @@ router.post(`/`, upload.single('image'), async (req, res) => {
             return res.status(400).json({ message: "No file uploaded" });
         }
         const categories = await Category.findById(req.body.category);
-        if (!categories) return res.status(404).send("some error: ")
+        if (!categories) return res.status(404).send("some error: no category found ")
         const { name, description, richDescription, brand, price, category, countInStock, rating, numReviews, isFeatured, dateCreated } = req.body
-        const imagePath = req.file.path
-        const uploadImagePath = await uploadImage(imagePath)
+        const uploadImagePath = await uploadImage(req.file)
         let product = new ProductModel.Product({
             name, description, richDescription, image: uploadImagePath.secure_url, brand, price, category, countInStock, rating, numReviews, isFeatured, dateCreated
         })
         product = await ProductModel.Product.insertMany([product])
         if (!product)
             return res.status(404).json({ message: "the product not created " })
-        res.send(product)
+        res.json({message: "the product created successfully", product: product})
     } catch (error) {
-        console.log("EXCEPTION = > ", error.message)
+        res.send({ message: "some error ", error: error.message })
 
     }
 })
@@ -73,7 +73,7 @@ router.put('/gallery-images/:id', upload.array('images', 20), async (req, res) =
 
         let imagesPaths = [];
         for (const file of files) {
-            const uploadResult = await uploadImage(file.path); 
+            const uploadResult = await uploadImage(file); 
             if (uploadResult) {
                 imagesPaths.push(uploadResult.secure_url); 
             }
@@ -81,12 +81,12 @@ router.put('/gallery-images/:id', upload.array('images', 20), async (req, res) =
         const product = await ProductModel.Product.findByIdAndUpdate(req.params.id, {
             images: imagesPaths
         }, { new: true })
-
+        
         if (!product)
-            return res.status(500).send("the category is not available not updated")
+            return res.status(500).send("the product images  not updated")
         res.send(product)
     } catch (error) {
-        res.status(500).send("the category is not available not")
+        res.status(500).send("internal server error ")
 
     }
 
@@ -111,7 +111,6 @@ router.get(`/`, async (req, res) => {
 })
 
 // only single product with the help of id in url
-
 router.get('/:id', async (req, res) => {
     try {
         let productId = req.params.id
@@ -129,7 +128,6 @@ router.get('/:id', async (req, res) => {
         }
         
     } catch (error) {
-        console.error(error.message);
         res.status(500).send("Internal Server Error");
     }
 });
@@ -145,14 +143,12 @@ router.get('/get/count', async (req, res) => {
             res.status(404).send("Not found");
         }
     } catch (error) {
-        console.error(error.message);
         res.status(500).send("Internal Server Error");
     }
 });
 
 // for featured get product
 router.get('/get/featured/:count', async (req, res) => {
-
     try {
         const count = req.params.count ? req.params.count : 0
         const products = await ProductModel.Product.find({ isFeatured: true }).limit(+count)
@@ -163,15 +159,11 @@ router.get('/get/featured/:count', async (req, res) => {
             res.status(404).send("Not found");
         }
     } catch (error) {
-        console.error(error.message);
         res.status(500).send("Internal Server Error");
     }
 });
 
-
 // for update product 
-
-
 router.put('/:id', async (req, res) => {
     try {
 
@@ -184,7 +176,6 @@ router.put('/:id', async (req, res) => {
         if (!categories) return res.status(404).send("some error: ")
 
         const { name, description, richDescription, image, images, brand, price, category, countInStock, rating, numReviews, isFeatured, dateCreated } = req.body
-        console.log(req.params.id)
         const product = await ProductModel.Product.findByIdAndUpdate(req.params.id,
             {
                 name, description, richDescription, image, images, brand, price, category, countInStock, rating, numReviews, isFeatured, dateCreated
@@ -198,8 +189,7 @@ router.put('/:id', async (req, res) => {
         
 
     } catch (error) {
-        console.log(error.message)
-
+        res.status(500).send("internal server error")
     }
 })
 
