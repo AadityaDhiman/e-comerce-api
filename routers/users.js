@@ -9,7 +9,7 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
     try {
-        const userList = await UserModel.User.find().select("name email phone")
+        const userList = await UserModel.User.find()
         if (!userList) {
             res.status(500).json({ success: false });
         }
