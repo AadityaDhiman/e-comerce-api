@@ -45,6 +45,7 @@ router.post(`/`, upload.single('image'), async (req, res) => {
         if (!req.file) {
             return res.status(400).json({ message: "No file uploaded" });
         }
+        console.log(req.body.category)
         const categories = await Category.findById(req.body.category);
         if (!categories) return res.status(404).send("some error: no category found ")
         const { name, description, richDescription, brand, price, category, countInStock, rating, numReviews, isFeatured, dateCreated } = req.body
@@ -58,7 +59,7 @@ router.post(`/`, upload.single('image'), async (req, res) => {
         res.json({message: "the product created successfully", product: product})
     } catch (error) {
         res.send({ message: "some error ", error: error.message })
-
+        console.error(error.message)
     }
 })
 
